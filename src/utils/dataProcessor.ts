@@ -1,5 +1,3 @@
-import Papa from 'papaparse';
-
 // --- Interfaces ---
 export interface Sale {
   id: string;
@@ -31,92 +29,102 @@ export interface InvestorData {
   history: InvestorHistory[];
 }
 
+export interface Expense {
+  id: string;
+  description: string;
+  category: string;
+  value: number;
+  status: string;
+  date: string;
+  quantity: number;
+  unit: string;
+}
+
 export interface DashboardData {
   sales: Sale[];
   inventory: InventoryItem[];
   investorData: InvestorData;
+  expenses: Expense[];
 }
 
-// --- Funções Auxiliares ---
+// --- DADOS MOCKADOS (VENDAS ATUALIZADAS) ---
 
-// Remove R$, pontos e converte para número
-const parseCurrency = (value: any): number => {
-  if (typeof value === 'number') return value;
-  if (!value) return 0;
-  return parseFloat(value.toString().replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+const MOCK_SALES: Sale[] = [
+  { 
+    id: '1', 
+    productName: 'Brownie', 
+    quantity: 1, 
+    channel: 'Whatsapp', 
+    revenue: 10.00, 
+    profit: 7.50, // 10.00 - 2.50
+    date: '30/01/2026' 
+  },
+  { 
+    id: '2', 
+    productName: 'Mini Brownie', 
+    quantity: 35, 
+    channel: 'Whatsapp', 
+    revenue: 74.90, 
+    profit: 41.65, // 74.90 - 33.25
+    date: '02/02/2026' 
+  },
+  { 
+    id: '3', 
+    productName: 'Brownie', 
+    quantity: 2, 
+    channel: 'Whatsapp', 
+    revenue: 20.00, 
+    profit: 15.00, // 20.00 - 5.00
+    date: '02/02/2026' 
+  }
+];
+
+const MOCK_INVENTORY: InventoryItem[] = [
+  { id: 1, item: 'Leite Condensado', current: 20, min: 10, unit: 'latas' },
+  { id: 2, item: 'Cacau em Pó', current: 3, min: 2, unit: 'kg' },
+  { id: 3, item: 'Chocolate Nobre', current: 5, min: 3, unit: 'kg' },
+  { id: 4, item: 'Embalagens', current: 150, min: 50, unit: 'unid' },
+];
+
+const MOCK_INVESTOR: InvestorData = {
+  totalDebt: 3000,
+  paid: 0,
+  history: [
+    { month: 'Mês 1', paid: 0, expected: 350 },
+    { month: 'Mês 2', paid: 0, expected: 350 },
+  ]
 };
 
-// Limpa o ID (transforma "3.0" em "3")
-const cleanId = (value: any): string => {
-  if (!value) return '';
-  return value.toString().split('.')[0].trim(); 
-};
+// Dados de Custos (Mantidos da mensagem anterior)
+const MOCK_EXPENSES: Expense[] = [
+  { id: '1', description: 'Margarina', category: 'Matéria-prima', value: 32.70, status: 'Pago', date: '30/01/2026', quantity: 3, unit: 'KG' },
+  { id: '2', description: 'Farinha', category: 'Matéria-prima', value: 4.49, status: 'Pago', date: '30/01/2026', quantity: 1, unit: 'KG' },
+  { id: '3', description: 'Açucar', category: 'Matéria-prima', value: 8.36, status: 'Pago', date: '30/01/2026', quantity: 2, unit: 'KG' },
+  { id: '4', description: 'Caixa de pizza', category: 'Embalagem', value: 30.90, status: 'Pago', date: '30/01/2026', quantity: 30, unit: 'UN' },
+  { id: '5', description: 'Chocolate Fracionado', category: 'Matéria-prima', value: 55.90, status: 'Pago', date: '30/01/2026', quantity: 2, unit: 'KG' },
+  { id: '6', description: 'Granulado Floco Macio', category: 'Matéria-prima', value: 57.99, status: 'Pago', date: '30/01/2026', quantity: 2.5, unit: 'KG' },
+  { id: '7', description: 'Chocolate nobre', category: 'Matéria-prima', value: 142.99, status: 'Pago', date: '30/01/2026', quantity: 2.1, unit: 'KG' },
+  { id: '8', description: 'Chocolate em pó', category: 'Matéria-prima', value: 44.90, status: 'Pago', date: '30/01/2026', quantity: 1, unit: 'KG' },
+  { id: '9', description: 'Granulado Pistache', category: 'Matéria-prima', value: 4.99, status: 'Pago', date: '30/01/2026', quantity: 0.8, unit: 'KG' },
+  { id: '10', description: 'Leite condensado', category: 'Matéria-prima', value: 267.96, status: 'Pago', date: '30/01/2026', quantity: 20, unit: 'KG' },
+  { id: '11', description: 'Creme de leite', category: 'Matéria-prima', value: 63.96, status: 'Pago', date: '30/01/2026', quantity: 4, unit: 'KG' },
+  { id: '12', description: 'Glucose', category: 'Matéria-prima', value: 16.79, status: 'Pago', date: '30/01/2026', quantity: 1, unit: 'KG' },
+  { id: '13', description: 'Espatula Silicone', category: 'Equipamento', value: 26.89, status: 'Pago', date: '30/01/2026', quantity: 1, unit: 'UN' },
+  { id: '14', description: 'Forma Papel Brigadeiro', category: 'Embalagem', value: 14.94, status: 'Pago', date: '30/01/2026', quantity: 6, unit: 'PCT' },
+  { id: '15', description: 'Forma Papel Brigadeiro Branco', category: 'Embalagem', value: 10.14, status: 'Pago', date: '30/01/2026', quantity: 6, unit: 'PCT' },
+  { id: '16', description: 'Etiqueta Data Validade', category: 'Embalagem', value: 2.89, status: 'Pago', date: '30/01/2026', quantity: 100, unit: 'UN' },
+  { id: '17', description: 'Folha Transparente Brownie', category: 'Embalagem', value: 4.89, status: 'Pago', date: '30/01/2026', quantity: 1000, unit: 'UN' },
+  { id: '18', description: 'Blister Brigadeiro', category: 'Embalagem', value: 63.49, status: 'Pago', date: '30/01/2026', quantity: 500, unit: 'UN' },
+  { id: '19', description: 'Panela de Brigadeiros', category: 'Equipamento', value: 1406.00, status: 'Pago', date: '29/01/2026', quantity: 2, unit: 'UN' },
+  { id: '20', description: 'Porconadoras de brigadeiro', category: 'Equipamento', value: 311.10, status: 'Pago', date: '29/01/2026', quantity: 2, unit: 'UN' },
+  { id: '21', description: 'Expositora de Brigadeiro', category: 'Equipamento', value: 145.00, status: 'Pago', date: '02/02/2026', quantity: 1, unit: 'UN' },
+  { id: '22', description: 'Kit aro + Forma Brownie', category: 'Equipamento', value: 127.96, status: 'à pagar', date: '02/02/2026', quantity: 2, unit: 'UN' },
+  { id: '23', description: 'Vasilhas para Armazenamento', category: 'Equipamento', value: 139.90, status: 'à pagar', date: '02/02/2026', quantity: 10, unit: 'UN' },
+];
 
-export const processCSV = (file: File, callback: (data: DashboardData) => void) => {
-  Papa.parse(file, {
-    header: true,
-    encoding: "UTF-8", // Tente "ISO-8859-1" se os acentos aparecerem errados
-    skipEmptyLines: true,
-    complete: (results) => {
-      const rawData = results.data as any[];
-      
-      // 1. CRIA O MAPA DE PRODUTOS (Olhando a tabela da direita)
-      // Exemplo: cria uma memória { "1": "Brigadeiro", "3": "Brownie" }
-      const productMap: Record<string, string> = {};
-      
-      rawData.forEach((row: any) => {
-        // Colunas da direita: 'Id dos produtos' e 'Produtos'
-        const refId = cleanId(row['Id dos produtos']);
-        const refName = row['Produtos'];
-        
-        if (refId && refName) {
-          productMap[refId] = refName;
-        }
-      });
-
-      // 2. PROCESSA AS VENDAS (Olhando a tabela da esquerda)
-      const sales: Sale[] = rawData
-        .filter((row: any) => row['Produto'] && row['Quantidade Vendida']) // Filtra linhas vazias de venda
-        .map((row: any) => {
-          const saleId = cleanId(row['Produto']);
-          
-          // AQUI ESTÁ A MÁGICA:
-          // Em vez de pegar row['Produtos'] (que pode estar errado na linha),
-          // buscamos no mapa que criamos acima usando o ID da venda.
-          const correctName = productMap[saleId] || `Produto ${saleId}`;
-
-          return {
-            id: saleId,
-            productName: correctName, 
-            quantity: parseFloat(row['Quantidade Vendida']),
-            channel: row['Canal de Venda'] || 'Presencial',
-            revenue: parseCurrency(row['Faturamento Bruto']),
-            profit: parseCurrency(row['Lucro']),
-            date: row['Data'] || new Date().toLocaleDateString('pt-BR'), 
-          };
-        });
-
-      // Dados de Estoque (Simulados - Preencha conforme necessidade)
-      const inventory: InventoryItem[] = [
-        { id: 1, item: 'Leite Condensado', current: 5, min: 10, unit: 'latas' },
-        { id: 2, item: 'Cacau em Pó', current: 2, min: 5, unit: 'kg' },
-        { id: 3, item: 'Farinha de Trigo', current: 20, min: 10, unit: 'kg' },
-      ];
-
-      // Dados do Investidor (Simulados)
-      const investorData: InvestorData = {
-        totalDebt: 50000,
-        paid: 12500,
-        history: [
-          { month: 'Jan', paid: 1000, expected: 1000 },
-          { month: 'Fev', paid: 1200, expected: 1000 },
-        ]
-      };
-
-      callback({ sales, inventory, investorData });
-    },
-    error: (error: any) => {
-      console.error("Erro ao ler CSV:", error);
-    }
-  });
+export const initialData: DashboardData = {
+  sales: MOCK_SALES,
+  inventory: MOCK_INVENTORY,
+  investorData: MOCK_INVESTOR,
+  expenses: MOCK_EXPENSES
 };

@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Upload, Filter, LogOut } from 'lucide-react';
-import { processCSV, type DashboardData } from './utils/dataProcessor';
+import { Filter, LogOut } from 'lucide-react'; 
+import { initialData, type DashboardData } from './utils/dataProcessor';
 import { KPICards } from './components/KPICards';
 import { SalesByProductChart, ChannelPieChart, InvestorEvolutionChart } from './components/Charts';
 import { InventoryAlert } from './components/InventoryAlert';
+import { ExpensesTable } from './components/ExpenseTable'; // <--- Importe aqui
 import { Login } from './components/Login';
 
 interface ChartDataPoint {
@@ -12,23 +13,13 @@ interface ChartDataPoint {
 }
 
 const App: React.FC = () => {
-  // 1. TODOS OS HOOKS DEVEM FICAR NO TOPO (ANTES DE QUALQUER RETURN)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-  const [data, setData] = useState<DashboardData>({
-    sales: [],
-    inventory: [],
-    investorData: {
-      totalDebt: 0, paid: 0, history: [],
-      currentDebt: 0
-    }
-  });
+  const [data] = useState<DashboardData>(initialData);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  // Movi os useMemo para cima do return condicional
+  // Cálculos existentes...
   const filteredSales = useMemo(() => {
     if (!dateRange.start || !dateRange.end) return data.sales;
-    // Aqui você pode implementar a lógica real de filtro de data se quiser
     return data.sales; 
   }, [data.sales, dateRange]);
 
@@ -55,22 +46,10 @@ const App: React.FC = () => {
     return { totalRevenue, totalProfit, salesByProduct, salesByChannel };
   }, [filteredSales]);
 
-  // Funções auxiliares
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      processCSV(file, (processedData) => {
-        setData(processedData);
-      });
-    }
-  };
-
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setData({ sales: [], inventory: [], investorData: { totalDebt: 0, paid: 0, history: [] } });
   };
 
-  // 2. AGORA SIM O RETURN CONDICIONAL (DEPOIS DE TUDO CALCULADO)
   if (!isAuthenticated) {
     return <Login onLogin={setIsAuthenticated} />;
   }
@@ -84,39 +63,19 @@ const App: React.FC = () => {
             <p className="text-quintal-light text-sm mt-1">Painel de Controle Gerencial</p>
           </div>
           
-          <div className="flex gap-3">
-            <label className="flex items-center gap-2 bg-quintal-accent hover:bg-quintal-main transition px-4 py-2 rounded-lg cursor-pointer font-medium shadow-md">
-              <Upload size={18} />
-              Importar Planilha (.csv)
-              <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-            </label>
-            
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-800/80 hover:bg-red-700 transition px-4 py-2 rounded-lg font-medium shadow-md text-sm"
-            >
-              <LogOut size={18} />
-              Sair
-            </button>
-          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-800/80 hover:bg-red-700 transition px-4 py-2 rounded-lg font-medium shadow-md text-sm"
+          >
+            <LogOut size={18} />
+            Sair
+          </button>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
-        {/* Aviso de Lista Vazia */}
-        {data.sales.length === 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded shadow-sm">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong className="font-bold">Atenção:</strong> Nenhum dado carregado. 
-                  Clique em "Importar Planilha" no topo e selecione seu arquivo CSV para visualizar os gráficos.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
+        {/* Filtros */}
         <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-quintal-light">
             <div className="flex items-center gap-2 text-quintal-main font-semibold">
                 <Filter size={20} />
@@ -140,12 +99,15 @@ const App: React.FC = () => {
             </div>
         </div>
 
+        {/* Cards principais */}
         <KPICards 
           totalRevenue={stats.totalRevenue} 
           totalProfit={stats.totalProfit} 
-          debtBalance={data.investorData.totalDebt - data.investorData.paid} 
+          debtBalance={data.investorData.totalDebt - data.investorData.paid}
+          totalSalesCount={filteredSales.length} // <--- ADICIONE ESTA LINHA
         />
 
+        {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <SalesByProductChart data={stats.salesByProduct} />
@@ -157,6 +119,12 @@ const App: React.FC = () => {
             <ChannelPieChart data={stats.salesByChannel} />
           </div>
         </div>
+
+        {/* --- NOVA TABELA DE CUSTOS --- */}
+        <div className="mt-8">
+            <ExpensesTable expenses={data.expenses} />
+        </div>
+
       </main>
     </div>
   );
