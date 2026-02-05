@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, LogOut } from 'lucide-react'; 
+import { Filter, LogOut } from 'lucide-react';
 import { initialData, type DashboardData } from './utils/dataProcessor';
 import { KPICards } from './components/KPICards';
 import { SalesByProductChart, ChannelPieChart, InvestorEvolutionChart } from './components/Charts';
 import { InventoryAlert } from './components/InventoryAlert';
-import { ExpensesTable } from './components/ExpenseTable'; // <--- Importe aqui
+import { ExpensesTable } from './components/ExpenseTable';
+// Novos componentes importados (lembre-se de ter criado os arquivos deles na pasta components)
+import { CostBreakdownChart } from './components/CostBreakdownChart';
+import { ProfitSimulator } from './components/ProfitSimulator';
 import { Login } from './components/Login';
 
 interface ChartDataPoint {
@@ -17,16 +20,18 @@ const App: React.FC = () => {
   const [data] = useState<DashboardData>(initialData);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  // Cálculos existentes...
+  // Lógica de Filtro
   const filteredSales = useMemo(() => {
     if (!dateRange.start || !dateRange.end) return data.sales;
-    return data.sales; 
+    // Aqui você pode adicionar lógica de data real se necessário
+    return data.sales;
   }, [data.sales, dateRange]);
 
+  // Cálculos Estatísticos
   const stats = useMemo(() => {
     const totalRevenue = filteredSales.reduce((acc, curr) => acc + curr.revenue, 0);
     const totalProfit = filteredSales.reduce((acc, curr) => acc + curr.profit, 0);
-    
+
     const productMap = filteredSales.reduce((acc, curr) => {
       if (!acc[curr.productName]) acc[curr.productName] = { name: curr.productName, value: 0 };
       acc[curr.productName].value += curr.revenue;
@@ -50,6 +55,11 @@ const App: React.FC = () => {
     setIsAuthenticated(false);
   };
 
+  // Calcula a margem atual (%) para passar ao Simulador
+  const currentMargin = stats.totalRevenue > 0 
+    ? (stats.totalProfit / stats.totalRevenue) * 100 
+    : 0;
+
   if (!isAuthenticated) {
     return <Login onLogin={setIsAuthenticated} />;
   }
@@ -62,7 +72,7 @@ const App: React.FC = () => {
             <h1 className="text-3xl font-bold">Quintal <span className="text-quintal-accent font-light">Doceria</span></h1>
             <p className="text-quintal-light text-sm mt-1">Painel de Controle Gerencial</p>
           </div>
-          
+
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-800/80 hover:bg-red-700 transition px-4 py-2 rounded-lg font-medium shadow-md text-sm"
@@ -99,28 +109,42 @@ const App: React.FC = () => {
             </div>
         </div>
 
-        {/* Cards principais */}
+        {/* Cards KPI (Atualizado com Ticket Médio e Margem) */}
         <KPICards 
           totalRevenue={stats.totalRevenue} 
           totalProfit={stats.totalProfit} 
           debtBalance={data.investorData.totalDebt - data.investorData.paid}
-          totalSalesCount={filteredSales.length} // <--- ADICIONE ESTA LINHA
+          totalSalesCount={filteredSales.length} 
         />
 
-        {/* Gráficos */}
+        {/* --- NOVO LAYOUT DE GRÁFICOS --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Coluna Principal: Vendas, Investidor e Simulador */}
           <div className="lg:col-span-2 space-y-6">
             <SalesByProductChart data={stats.salesByProduct} />
+            
             <InvestorEvolutionChart data={data.investorData.history} />
+            
+            {/* O "Brinquedo" do Investidor */}
+            <ProfitSimulator 
+                currentRevenue={stats.totalRevenue} 
+                currentMargin={currentMargin} 
+            />
           </div>
 
+          {/* Coluna Lateral: Alertas, Custos e Canais */}
           <div className="space-y-6">
             <InventoryAlert items={data.inventory} />
+            
+            {/* Novo Gráfico de Custos */}
+            <CostBreakdownChart expenses={data.expenses} />
+            
             <ChannelPieChart data={stats.salesByChannel} />
           </div>
         </div>
 
-        {/* --- NOVA TABELA DE CUSTOS --- */}
+        {/* Tabela Detalhada de Custos */}
         <div className="mt-8">
             <ExpensesTable expenses={data.expenses} />
         </div>
