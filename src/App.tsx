@@ -5,7 +5,6 @@ import { KPICards } from './components/KPICards';
 import { SalesByProductChart, ChannelPieChart, InvestorEvolutionChart } from './components/Charts';
 import { InventoryAlert } from './components/InventoryAlert';
 import { ExpensesTable } from './components/ExpenseTable';
-// Novos componentes importados (lembre-se de ter criado os arquivos deles na pasta components)
 import { CostBreakdownChart } from './components/CostBreakdownChart';
 import { ProfitSimulator } from './components/ProfitSimulator';
 import { Login } from './components/Login';
@@ -20,14 +19,12 @@ const App: React.FC = () => {
   const [data] = useState<DashboardData>(initialData);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  // Lógica de Filtro
+  // 1. Processamento de Vendas
   const filteredSales = useMemo(() => {
     if (!dateRange.start || !dateRange.end) return data.sales;
-    // Aqui você pode adicionar lógica de data real se necessário
     return data.sales;
   }, [data.sales, dateRange]);
 
-  // Cálculos Estatísticos
   const stats = useMemo(() => {
     const totalRevenue = filteredSales.reduce((acc, curr) => acc + curr.revenue, 0);
     const totalProfit = filteredSales.reduce((acc, curr) => acc + curr.profit, 0);
@@ -38,27 +35,45 @@ const App: React.FC = () => {
       return acc;
     }, {} as Record<string, ChartDataPoint>);
 
-    const salesByProduct = Object.values(productMap);
-
     const channelMap = filteredSales.reduce((acc, curr) => {
       if (!acc[curr.channel]) acc[curr.channel] = { name: curr.channel, value: 0 };
       acc[curr.channel].value += 1;
       return acc;
     }, {} as Record<string, ChartDataPoint>);
 
-    const salesByChannel = Object.values(channelMap);
-
-    return { totalRevenue, totalProfit, salesByProduct, salesByChannel };
+    return { 
+      totalRevenue, 
+      totalProfit, 
+      salesByProduct: Object.values(productMap), 
+      salesByChannel: Object.values(channelMap) 
+    };
   }, [filteredSales]);
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-  };
+  // 2. PREPARAÇÃO DOS DADOS DE CUSTOS (Aqui está a mágica)
+  const expensesChartData = useMemo(() => {
+    // Se não houver despesas, retorna array vazio
+    if (!data.expenses || data.expenses.length === 0) return [];
 
-  // Calcula a margem atual (%) para passar ao Simulador
+    // Agrupa valores por categoria
+    const categoryMap = data.expenses.reduce((acc, curr) => {
+      const cat = curr.category || 'Outros';
+      if (!acc[cat]) acc[cat] = 0;
+      acc[cat] += curr.value;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Formata para o gráfico: [{ name: 'Insumo', value: 500 }, ...]
+    return Object.entries(categoryMap).map(([name, value]) => ({
+      name,
+      value
+    }));
+  }, [data.expenses]);
+
   const currentMargin = stats.totalRevenue > 0 
     ? (stats.totalProfit / stats.totalRevenue) * 100 
     : 0;
+
+  const handleLogout = () => setIsAuthenticated(false);
 
   if (!isAuthenticated) {
     return <Login onLogin={setIsAuthenticated} />;
@@ -72,7 +87,6 @@ const App: React.FC = () => {
             <h1 className="text-3xl font-bold">Quintal <span className="text-quintal-accent font-light">Doceria</span></h1>
             <p className="text-quintal-light text-sm mt-1">Painel de Controle Gerencial</p>
           </div>
-
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-800/80 hover:bg-red-700 transition px-4 py-2 rounded-lg font-medium shadow-md text-sm"
@@ -84,7 +98,6 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 space-y-8">
-        
         {/* Filtros */}
         <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-quintal-light">
             <div className="flex items-center gap-2 text-quintal-main font-semibold">
@@ -93,23 +106,17 @@ const App: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">De:</span>
-                <input 
-                    type="date" 
-                    className="border rounded p-1 text-sm bg-gray-50"
-                    onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
-                />
+                <input type="date" className="border rounded p-1 text-sm bg-gray-50"
+                    onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))} />
             </div>
             <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">Até:</span>
-                <input 
-                    type="date" 
-                    className="border rounded p-1 text-sm bg-gray-50"
-                    onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
-                />
+                <input type="date" className="border rounded p-1 text-sm bg-gray-50"
+                    onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))} />
             </div>
         </div>
 
-        {/* Cards KPI (Atualizado com Ticket Médio e Margem) */}
+        {/* KPIs */}
         <KPICards 
           totalRevenue={stats.totalRevenue} 
           totalProfit={stats.totalProfit} 
@@ -117,38 +124,27 @@ const App: React.FC = () => {
           totalSalesCount={filteredSales.length} 
         />
 
-        {/* --- NOVO LAYOUT DE GRÁFICOS --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Coluna Principal: Vendas, Investidor e Simulador */}
           <div className="lg:col-span-2 space-y-6">
             <SalesByProductChart data={stats.salesByProduct} />
-            
             <InvestorEvolutionChart data={data.investorData.history} />
-            
-            {/* O "Brinquedo" do Investidor */}
-            <ProfitSimulator 
-                currentRevenue={stats.totalRevenue} 
-                currentMargin={currentMargin} 
-            />
+            <ProfitSimulator currentRevenue={stats.totalRevenue} currentMargin={currentMargin} />
           </div>
 
-          {/* Coluna Lateral: Alertas, Custos e Canais */}
           <div className="space-y-6">
             <InventoryAlert items={data.inventory} />
             
-            {/* Novo Gráfico de Custos */}
-            <CostBreakdownChart expenses={data.expenses} />
+            {/* --- AQUI ESTAVA O ERRO --- */}
+            {/* Antes estava: expenses={...}, Agora é: data={...} */}
+            <CostBreakdownChart data={expensesChartData} />
             
             <ChannelPieChart data={stats.salesByChannel} />
           </div>
         </div>
 
-        {/* Tabela Detalhada de Custos */}
         <div className="mt-8">
             <ExpensesTable expenses={data.expenses} />
         </div>
-
       </main>
     </div>
   );
