@@ -37,12 +37,12 @@ export const CostBreakdownChart: React.FC<CostBreakdownChartProps> = ({ data }) 
               dataKey="value"
               nameKey="name"
             >
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`}
+              formatter={(value: unknown) => `R$ ${Number(value).toFixed(2)}`}
               contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb' }}
             />
             <Legend verticalAlign="bottom" height={36} iconType="circle" />
