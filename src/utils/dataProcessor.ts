@@ -76,6 +76,24 @@ const MOCK_SALES: Sale[] = [
     revenue: 20.00, 
     profit: 15.00, // 20.00 - 5.00
     date: '02/02/2026' 
+  },
+    { 
+    id: '3', 
+    productName: 'Brownie', 
+    quantity: 2, 
+    channel: 'Whatsapp', 
+    revenue: 20.00, 
+    profit: 15.00, // 20.00 - 5.00
+    date: '02/02/2026' 
+  },
+  { 
+    id: '3', 
+    productName: 'Brownie', 
+    quantity: 1, 
+    channel: 'Presencial', 
+    revenue: 10.00, 
+    profit: 7.50, // 10.00 - 2.50
+    date: '05/02/2026' 
   }
 ];
 
