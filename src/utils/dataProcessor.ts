@@ -94,13 +94,22 @@ const MOCK_SALES: Sale[] = [
     revenue: 10.00, 
     profit: 7.50, // 10.00 - 2.50
     date: '05/02/2026' 
+  },
+    { 
+    id: '2', 
+    productName: 'Brigadeiro de pote', 
+    quantity: 2, 
+    channel: 'Presencial', 
+    revenue: 14.00, 
+    profit: 11.00, // 10.00 - 2.50
+    date: '05/02/2026' 
   }
 ];
 
 const MOCK_INVENTORY: InventoryItem[] = [
   { id: 1, item: 'Leite Condensado', current: 20, min: 10, unit: 'latas' },
   { id: 2, item: 'Cacau em Pó', current: 3, min: 2, unit: 'kg' },
-  { id: 3, item: 'Chocolate Nobre', current: 5, min: 3, unit: 'kg' },
+  { id: 3, item: 'Chocolate Nobre', current: 5, min: 5, unit: 'kg' },
   { id: 4, item: 'Embalagens', current: 150, min: 50, unit: 'unid' },
 ];
 
