@@ -65,7 +65,7 @@ const MOCK_SALES: Sale[] = [
     quantity: 35, 
     channel: 'Whatsapp', 
     revenue: 74.90, 
-    profit: 41.65, // 74.90 - 33.25
+    profit: 52.15, // 74.90 - 22.75
     date: '02/02/2026' 
   },
   { 
@@ -77,17 +77,8 @@ const MOCK_SALES: Sale[] = [
     profit: 15.00, // 20.00 - 5.00
     date: '02/02/2026' 
   },
-    { 
-    id: '3', 
-    productName: 'Brownie', 
-    quantity: 2, 
-    channel: 'Whatsapp', 
-    revenue: 20.00, 
-    profit: 15.00, // 20.00 - 5.00
-    date: '02/02/2026' 
-  },
   { 
-    id: '3', 
+    id: '4', 
     productName: 'Brownie', 
     quantity: 1, 
     channel: 'Presencial', 
@@ -95,14 +86,41 @@ const MOCK_SALES: Sale[] = [
     profit: 7.50, // 10.00 - 2.50
     date: '05/02/2026' 
   },
-    { 
-    id: '2', 
+  { 
+    id: '5', 
     productName: 'Brigadeiro de pote', 
     quantity: 2, 
     channel: 'Presencial', 
     revenue: 14.00, 
-    profit: 11.00, // 10.00 - 2.50
+    profit: 10.00, // 14.00 - 4.00
     date: '05/02/2026' 
+  },
+  { 
+    id: '6', 
+    productName: 'Brigadeiro de pote', 
+    quantity: 17, 
+    channel: 'Presencial', 
+    revenue: 119.00, 
+    profit: 85.00, // 119.00 - 34.00
+    date: '07/02/2026' 
+  },
+  { 
+    id: '7', 
+    productName: 'Mini Brownie', 
+    quantity: 29, 
+    channel: 'Presencial', 
+    revenue: 96.57, 
+    profit: 77.72, // 96.57 - 18.85
+    date: '07/02/2026' 
+  },
+  { 
+    id: '8', 
+    productName: 'Brownie', 
+    quantity: 9, 
+    channel: 'Presencial', 
+    revenue: 90.00, 
+    profit: 67.50, // 90.00 - 22.50
+    date: '07/02/2026' 
   }
 ];
 
